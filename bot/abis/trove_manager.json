@@ -1,0 +1,165 @@
+[
+    {
+        "name": "collateral_token",
+        "type": "function",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "address"}],
+        "stateMutability": "view"
+    },
+    {
+        "name": "borrow_token",
+        "type": "function",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "address"}],
+        "stateMutability": "view"
+    },
+    {
+        "name": "lender",
+        "type": "function",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "address"}],
+        "stateMutability": "view"
+    },
+    {
+        "anonymous": false,
+        "name": "PendingOwnershipTransfer",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "old_owner", "type": "address"},
+            {"indexed": true, "name": "new_owner", "type": "address"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "OwnershipTransferred",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "old_owner", "type": "address"},
+            {"indexed": true, "name": "new_owner", "type": "address"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "OpenTrove",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": false, "name": "collateral_amount", "type": "uint256"},
+            {"indexed": false, "name": "debt_amount", "type": "uint256"},
+            {"indexed": false, "name": "upfront_fee", "type": "uint256"},
+            {"indexed": false, "name": "annual_interest_rate", "type": "uint256"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "AddCollateral",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": false, "name": "collateral_amount", "type": "uint256"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "RemoveCollateral",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": false, "name": "collateral_amount", "type": "uint256"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "Borrow",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": false, "name": "debt_amount", "type": "uint256"},
+            {"indexed": false, "name": "upfront_fee", "type": "uint256"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "Repay",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": false, "name": "debt_amount", "type": "uint256"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "AdjustInterestRate",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": false, "name": "new_annual_interest_rate", "type": "uint256"},
+            {"indexed": false, "name": "upfront_fee", "type": "uint256"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "CloseTrove",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": false, "name": "collateral_amount", "type": "uint256"},
+            {"indexed": false, "name": "debt_amount", "type": "uint256"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "CloseZombieTrove",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": false, "name": "collateral_amount", "type": "uint256"},
+            {"indexed": false, "name": "debt_amount", "type": "uint256"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "LiquidateTrove",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": true, "name": "liquidator", "type": "address"},
+            {"indexed": false, "name": "collateral_amount", "type": "uint256"},
+            {"indexed": false, "name": "debt_amount", "type": "uint256"},
+            {"indexed": false, "name": "is_full_liquidation", "type": "bool"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "RedeemTrove",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "trove_id", "type": "uint256"},
+            {"indexed": true, "name": "trove_owner", "type": "address"},
+            {"indexed": true, "name": "redeemer", "type": "address"},
+            {"indexed": false, "name": "collateral_amount", "type": "uint256"},
+            {"indexed": false, "name": "debt_amount", "type": "uint256"}
+        ]
+    },
+    {
+        "anonymous": false,
+        "name": "Redeem",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "redeemer", "type": "address"},
+            {"indexed": false, "name": "collateral_amount", "type": "uint256"},
+            {"indexed": false, "name": "debt_amount", "type": "uint256"}
+        ]
+    }
+]

@@ -1,0 +1,15 @@
+[
+    {
+        "anonymous": false,
+        "name": "DeployNewMarket",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "deployer", "type": "address"},
+            {"indexed": true, "name": "trove_manager", "type": "address"},
+            {"indexed": false, "name": "sorted_troves", "type": "address"},
+            {"indexed": false, "name": "dutch_desk", "type": "address"},
+            {"indexed": false, "name": "auction", "type": "address"},
+            {"indexed": false, "name": "lender", "type": "address"}
+        ]
+    }
+]

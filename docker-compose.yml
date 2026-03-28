@@ -1,0 +1,9 @@
+services:
+  monitoring-bot:
+    build: .
+    container_name: monitoring-bot
+    env_file: .env
+    environment:
+      NETWORK: ethereum
+      RPC_URL: ${RPC_URL}
+    restart: unless-stopped
