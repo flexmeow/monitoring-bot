@@ -42,6 +42,8 @@ _abis = Path(__file__).parent / "abis"
 REGISTRY_ABI = json.loads((_abis / "registry.json").read_text())
 FACTORY_ABI = json.loads((_abis / "factory.json").read_text())
 TROVE_MANAGER_ABI = json.loads((_abis / "trove_manager.json").read_text())
+DUTCH_DESK_ABI = json.loads((_abis / "dutch_desk.json").read_text())
+AUCTION_ABI = json.loads((_abis / "auction.json").read_text())
 LENDER_ABI = json.loads((_abis / "lender.json").read_text())
 ERC20_ABI = json.loads((_abis / "erc20.json").read_text())
 
@@ -111,3 +113,19 @@ def get_all_lenders(w3: Web3, markets: list[str]) -> list[str]:
     ]
     lenders = multicall(w3, lender_calls)
     return list(set(w3.to_checksum_address(addr) for addr in lenders))
+
+
+def get_all_auctions(w3: Web3, markets: list[str]) -> list[str]:
+    """Get all auction contract addresses from markets."""
+    dutch_desk_calls = [
+        w3.eth.contract(address=w3.to_checksum_address(m), abi=TROVE_MANAGER_ABI).functions.dutch_desk()
+        for m in markets
+    ]
+    dutch_desks = multicall(w3, dutch_desk_calls)
+
+    auction_calls = [
+        w3.eth.contract(address=w3.to_checksum_address(dd), abi=DUTCH_DESK_ABI).functions.auction()
+        for dd in dutch_desks
+    ]
+    auction_addrs = multicall(w3, auction_calls)
+    return list(set(w3.to_checksum_address(a) for a in auction_addrs))

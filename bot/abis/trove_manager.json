@@ -21,6 +21,13 @@
         "stateMutability": "view"
     },
     {
+        "name": "dutch_desk",
+        "type": "function",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "address"}],
+        "stateMutability": "view"
+    },
+    {
         "anonymous": false,
         "name": "PendingOwnershipTransfer",
         "type": "event",
