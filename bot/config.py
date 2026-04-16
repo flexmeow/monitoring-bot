@@ -17,8 +17,8 @@ class NetworkCfg(TypedDict):
 
 NETWORKS: Mapping[str, NetworkCfg] = {
     "ethereum": {
-        "registry": "0x686725E618742071D52966e90ca4727B506bC5f1",
-        "factory": "0x7488CCBe472267398420f62673926343a32A27b7",
+        "registry": "0xA6D5efF88aB2D192db11A32912c346c8c0AFe125",
+        "factory": "0x609CbB93c1F02552967A5C457047a13e6b70B6d5",
         "explorer": "https://etherscan.io/",
         "known_addresses": {
             "0xEf77cc176c748d291EfB6CdC982c5744fC7211c8": "yRoboTreasury",
