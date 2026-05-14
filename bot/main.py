@@ -302,34 +302,6 @@ async def on_redeem(bot: TinyBot, log: object) -> None:
     )
 
 
-async def on_pending_ownership_transfer(bot: TinyBot, log: object) -> None:
-    trove_id: int = log.args.trove_id
-    old_owner: str = log.args.old_owner
-    new_owner: str = log.args.new_owner
-
-    await notify_group_chat(
-        f"🔑 <b>Pending Ownership Transfer</b>\n\n"
-        f"<b>Trove ID:</b> {short(trove_id)}\n"
-        f"<b>From:</b> {safe_name(bot.w3, old_owner, shorten=True)}\n"
-        f"<b>To:</b> {safe_name(bot.w3, new_owner, shorten=True)}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
-    )
-
-
-async def on_ownership_transferred(bot: TinyBot, log: object) -> None:
-    trove_id: int = log.args.trove_id
-    old_owner: str = log.args.old_owner
-    new_owner: str = log.args.new_owner
-
-    await notify_group_chat(
-        f"🔑 <b>Ownership Transferred</b>\n\n"
-        f"<b>Trove ID:</b> {short(trove_id)}\n"
-        f"<b>From:</b> {safe_name(bot.w3, old_owner, shorten=True)}\n"
-        f"<b>To:</b> {safe_name(bot.w3, new_owner, shorten=True)}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
-    )
-
-
 # =============================================================================
 # Auction Event Handlers
 # =============================================================================
@@ -529,8 +501,6 @@ async def run() -> None:
         "LiquidateTrove": on_liquidate_trove,
         "RedeemTrove": on_redeem_trove,
         "Redeem": on_redeem,
-        "PendingOwnershipTransfer": on_pending_ownership_transfer,
-        "OwnershipTransferred": on_ownership_transferred,
     }
     for event, handler in trove_events.items():
         bot.listen(poll_interval=INTERVAL, event=event, addresses=markets, abi=TROVE_MANAGER_ABI, handler=handler)

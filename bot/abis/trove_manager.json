@@ -29,26 +29,6 @@
     },
     {
         "anonymous": false,
-        "name": "PendingOwnershipTransfer",
-        "type": "event",
-        "inputs": [
-            {"indexed": true, "name": "trove_id", "type": "uint256"},
-            {"indexed": true, "name": "old_owner", "type": "address"},
-            {"indexed": true, "name": "new_owner", "type": "address"}
-        ]
-    },
-    {
-        "anonymous": false,
-        "name": "OwnershipTransferred",
-        "type": "event",
-        "inputs": [
-            {"indexed": true, "name": "trove_id", "type": "uint256"},
-            {"indexed": true, "name": "old_owner", "type": "address"},
-            {"indexed": true, "name": "new_owner", "type": "address"}
-        ]
-    },
-    {
-        "anonymous": false,
         "name": "OpenTrove",
         "type": "event",
         "inputs": [
