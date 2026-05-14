@@ -502,8 +502,9 @@ async def run() -> None:
         "RedeemTrove": on_redeem_trove,
         "Redeem": on_redeem,
     }
-    for event, handler in trove_events.items():
-        bot.listen(poll_interval=INTERVAL, event=event, addresses=markets, abi=TROVE_MANAGER_ABI, handler=handler)
+    if markets:
+        for event, handler in trove_events.items():
+            bot.listen(poll_interval=INTERVAL, event=event, addresses=markets, abi=TROVE_MANAGER_ABI, handler=handler)
 
     # Lender events
     lender_events = {
@@ -511,16 +512,18 @@ async def run() -> None:
         "Deposit": on_deposit,
         "Withdraw": on_withdraw,
     }
-    for event, handler in lender_events.items():
-        bot.listen(poll_interval=INTERVAL, event=event, addresses=lenders, abi=LENDER_ABI, handler=handler)
+    if lenders:
+        for event, handler in lender_events.items():
+            bot.listen(poll_interval=INTERVAL, event=event, addresses=lenders, abi=LENDER_ABI, handler=handler)
 
     # Auction events
     auction_events = {
         "AuctionKick": on_auction_kick,
         "AuctionTake": on_auction_take,
     }
-    for event, handler in auction_events.items():
-        bot.listen(poll_interval=INTERVAL, event=event, addresses=auctions, abi=AUCTION_ABI, handler=handler)
+    if auctions:
+        for event, handler in auction_events.items():
+            bot.listen(poll_interval=INTERVAL, event=event, addresses=auctions, abi=AUCTION_ABI, handler=handler)
 
     # Registry events
     bot.listen(
