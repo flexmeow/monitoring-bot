@@ -1,0 +1,12 @@
+[
+    {
+        "name": "strategyReportTrigger",
+        "type": "function",
+        "inputs": [{"name": "_strategy", "type": "address"}],
+        "outputs": [
+            {"name": "", "type": "bool"},
+            {"name": "", "type": "bytes"}
+        ],
+        "stateMutability": "view"
+    }
+]

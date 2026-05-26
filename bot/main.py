@@ -4,11 +4,17 @@ from tinybot import TinyBot, multicall, notify_group_chat
 
 from bot.config import (
     AUCTION_ABI,
+    COMMON_REPORT_TRIGGER,
     ERC20_ABI,
     FACTORY_ABI,
     INTERVAL,
+    KEEPER_ABI,
     LENDER_ABI,
+    MAX_GAS_GWEI,
+    PERMISSIONLESS_KEEPER,
     REGISTRY_ABI,
+    REPORT_INTERVAL,
+    REPORT_TRIGGER_ABI,
     TROVE_MANAGER_ABI,
     explorer_tx_url,
     factory_addr,
@@ -474,6 +480,35 @@ async def on_deploy_new_market(bot: TinyBot, log: object) -> None:
 
 
 # =============================================================================
+# Periodic Tasks
+# =============================================================================
+
+
+async def check_and_report(bot: TinyBot) -> None:
+    base_fee_gwei = bot.w3.eth.get_block("latest").baseFeePerGas / 1e9
+    if base_fee_gwei > MAX_GAS_GWEI:
+        print(f"skipping report: base fee {base_fee_gwei:.2f} gwei > {MAX_GAS_GWEI}")
+        return
+
+    markets = get_all_markets(bot.w3)
+    if not markets:
+        return
+
+    lenders = get_all_lenders(bot.w3, markets)
+    trigger = bot.w3.eth.contract(address=COMMON_REPORT_TRIGGER, abi=REPORT_TRIGGER_ABI)
+    keeper = bot.w3.eth.contract(address=PERMISSIONLESS_KEEPER, abi=KEEPER_ABI)
+
+    for lender in lenders:
+        should_report, _ = trigger.functions.strategyReportTrigger(lender).call()
+        if not should_report:
+            continue
+
+        call = keeper.functions.report(lender)
+        tx_hash = bot.executor.execute(call, max_priority_fee_gwei=0.1)
+        print(f"report tx sent for {lender}: {tx_hash}")
+
+
+# =============================================================================
 # Main
 # =============================================================================
 
@@ -482,6 +517,7 @@ async def run() -> None:
     bot = TinyBot(
         rpc_url=os.environ["RPC_URL"],
         name=f"📡 {network()} flex monitor",
+        private_key=os.environ["KEEPER_PRIVATE_KEY"],
     )
 
     markets = get_all_markets(bot.w3)
@@ -549,6 +585,9 @@ async def run() -> None:
         abi=FACTORY_ABI,
         handler=on_deploy_new_market,
     )
+
+    # Periodic: check & report strategies hourly
+    bot.every(REPORT_INTERVAL, check_and_report)
 
     # # # TEST Trove Manager
     # await bot.replay("on_open_trove", from_block=24750608, to_block=24750610)

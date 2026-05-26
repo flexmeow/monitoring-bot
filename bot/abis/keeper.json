@@ -1,0 +1,12 @@
+[
+    {
+        "name": "report",
+        "type": "function",
+        "inputs": [{"name": "_strategy", "type": "address"}],
+        "outputs": [
+            {"name": "", "type": "uint256"},
+            {"name": "", "type": "uint256"}
+        ],
+        "stateMutability": "nonpayable"
+    }
+]

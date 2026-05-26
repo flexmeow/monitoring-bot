@@ -34,8 +34,16 @@ NETWORKS: Mapping[str, NetworkCfg] = {
     },
 }
 
-# Interval
+# Common Report Trigger and Permissionless Keeper (Yearn V3)
+COMMON_REPORT_TRIGGER = Web3.to_checksum_address("0xf8dF17a35c88AbB25e83C92f9D293B4368b9D52D")
+PERMISSIONLESS_KEEPER = Web3.to_checksum_address("0x52605BbF54845f520a3E94792d019f62407db2f8")
+
+# Intervals
 INTERVAL = 300
+REPORT_INTERVAL = 3600
+
+# Max base fee for reporting (gwei)
+MAX_GAS_GWEI = 1
 
 # ABIs
 _abis = Path(__file__).parent / "abis"
@@ -45,6 +53,8 @@ TROVE_MANAGER_ABI = json.loads((_abis / "trove_manager.json").read_text())
 DUTCH_DESK_ABI = json.loads((_abis / "dutch_desk.json").read_text())
 AUCTION_ABI = json.loads((_abis / "auction.json").read_text())
 LENDER_ABI = json.loads((_abis / "lender.json").read_text())
+REPORT_TRIGGER_ABI = json.loads((_abis / "report_trigger.json").read_text())
+KEEPER_ABI = json.loads((_abis / "keeper.json").read_text())
 ERC20_ABI = json.loads((_abis / "erc20.json").read_text())
 
 
