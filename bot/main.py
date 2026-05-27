@@ -591,7 +591,7 @@ async def run() -> None:
     bot.every(REPORT_INTERVAL, check_and_report)
 
     # # TEST Trove Manager
-    await bot.replay("on_open_trove", from_block=25179201, to_block=25179204)
+    # await bot.replay("on_open_trove", from_block=25179201, to_block=25179204)
     # await bot.replay("on_close_trove", from_block=24743415, to_block=24743417)
     # await bot.replay("on_close_zombie_trove", from_block=24750530, to_block=24750532)
     # await bot.replay("on_add_collateral", from_block=24742696, to_block=24742698)
