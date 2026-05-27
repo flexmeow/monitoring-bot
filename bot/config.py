@@ -70,6 +70,14 @@ def explorer_tx_url() -> str:
     return cfg()["explorer"] + "tx/"
 
 
+def fmt(val: float, decimals: int = 2) -> str:
+    """Format with thousand separators; strip decimals if all zeros."""
+    s = f"{val:,.{decimals}f}"
+    if s.endswith("." + "0" * decimals):
+        return s[: -(decimals + 1)]
+    return s
+
+
 def short(val: str) -> str:
     """Shorten an address or ID to first 6 and last 4 chars."""
     val = str(val)
