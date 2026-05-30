@@ -207,11 +207,13 @@ async def on_adjust_interest_rate(bot: TinyBot, log: object) -> None:
     tm = bot.w3.eth.contract(address=log.address, abi=TROVE_MANAGER_ABI)
     borr_token = bot.w3.eth.contract(address=tm.functions.borrow_token().call(), abi=ERC20_ABI)
     sym, dec = multicall(bot.w3, [borr_token.functions.symbol(), borr_token.functions.decimals()])
+    old_rate = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber - 1)[2]
 
     await notify_group_chat(
         f"⚖️ <b>Interest Rate Adjusted</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
+        f"<b>Old Rate:</b> {old_rate / (10 ** (dec - 2)):.2f}%\n"
         f"<b>New Rate:</b> {rate / (10 ** (dec - 2)):.2f}%\n"
         f"<b>Upfront Fee:</b> {fmt(upfront_fee / (10**dec))} {sym}\n\n"
         f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
@@ -270,6 +272,7 @@ async def on_redeem_trove(bot: TinyBot, log: object) -> None:
             borr_token.functions.decimals(),
         ],
     )
+    rate = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber - 1)[2]
 
     await notify_group_chat(
         f"😬 <b>Trove Redeemed</b>\n\n"
@@ -277,7 +280,8 @@ async def on_redeem_trove(bot: TinyBot, log: object) -> None:
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Redeemer:</b> {safe_name(bot.w3, redeemer, shorten=True)}\n"
         f"<b>Collateral:</b> {fmt(collateral / (10**coll_dec))} {coll_sym}\n"
-        f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}\n\n"
+        f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}\n"
+        f"<b>Rate:</b> {rate / (10 ** (borr_dec - 2)):.2f}%\n\n"
         f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
     )
 

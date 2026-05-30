@@ -28,6 +28,21 @@
         "stateMutability": "view"
     },
     {
+        "name": "troves",
+        "type": "function",
+        "inputs": [{"name": "trove_id", "type": "uint256"}],
+        "outputs": [
+            {"name": "debt", "type": "uint256"},
+            {"name": "collateral", "type": "uint256"},
+            {"name": "annual_interest_rate", "type": "uint256"},
+            {"name": "last_debt_update_time", "type": "uint64"},
+            {"name": "last_interest_rate_adj_time", "type": "uint64"},
+            {"name": "owner", "type": "address"},
+            {"name": "status", "type": "uint8"}
+        ],
+        "stateMutability": "view"
+    },
+    {
         "anonymous": false,
         "name": "OpenTrove",
         "type": "event",
