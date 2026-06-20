@@ -29,6 +29,9 @@ htmlcov/
 .env
 .env.local
 
+# Local alerts state
+alerts.json
+
 # Jupyter Notebook
 .ipynb_checkpoints
 

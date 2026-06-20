@@ -45,6 +45,17 @@ REPORT_INTERVAL = 3600
 # Max base fee for reporting (gwei)
 MAX_GAS_GWEI = 1
 
+# Alerts
+ALERTS_STATE_PATH = os.environ.get("ALERTS_STATE_PATH", "alerts.json")
+MAX_ADDRESSES_PER_USER = 5
+
+# Alerts backup (private GitHub repo, via the Contents API)
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "")  # "owner/repo"
+GITHUB_BACKUP_PATH = "alerts.json"
+GITHUB_BACKUP_BRANCH = "main"
+BACKUP_INTERVAL = 86400
+
 # ABIs
 _abis = Path(__file__).parent / "abis"
 REGISTRY_ABI = json.loads((_abis / "registry.json").read_text())
@@ -86,6 +97,14 @@ def short(val: str) -> str:
     return f"{val[:6]}...{val[-4:]}"
 
 
+def parse_address(raw: str) -> str | None:
+    """Return the checksummed address, or None if invalid."""
+    try:
+        return Web3.to_checksum_address(raw.strip())
+    except (ValueError, TypeError):
+        return None
+
+
 def safe_name(w3: Web3, address: str, shorten: bool = False) -> str:
     address = w3.to_checksum_address(address)
     try:
@@ -103,6 +122,15 @@ def safe_name(w3: Web3, address: str, shorten: bool = False) -> str:
     if known:
         return known
     return short(address) if shorten else address
+
+
+def labeled_address(w3: Web3, address: str) -> str:
+    """Address as tap-to-copy <code>, prefixed with its name if one resolves."""
+    address = Web3.to_checksum_address(address)
+    name = safe_name(w3, address)
+    if name == address:
+        return f"<code>{address}</code>"
+    return f"{name} (<code>{address}</code>)"
 
 
 def registry_addr() -> str:

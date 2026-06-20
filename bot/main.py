@@ -1,12 +1,22 @@
+import asyncio
 import os
 
 from tinybot import TinyBot, multicall, notify_group_chat
 
+from bot.alerts.forward import post_event
+from bot.alerts.poller import telegram_command_loop
+from bot.alerts.store import Store
 from bot.config import (
+    ALERTS_STATE_PATH,
     AUCTION_ABI,
+    BACKUP_INTERVAL,
     COMMON_REPORT_TRIGGER,
     ERC20_ABI,
     FACTORY_ABI,
+    GITHUB_BACKUP_BRANCH,
+    GITHUB_BACKUP_PATH,
+    GITHUB_REPO,
+    GITHUB_TOKEN,
     INTERVAL,
     KEEPER_ABI,
     LENDER_ABI,
@@ -54,7 +64,8 @@ async def on_open_trove(bot: TinyBot, log: object) -> None:
         ],
     )
 
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"🏦 <b>Trove Opened</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
@@ -62,7 +73,8 @@ async def on_open_trove(bot: TinyBot, log: object) -> None:
         f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}\n"
         f"<b>Upfront Fee:</b> {fmt(upfront_fee / (10**borr_dec))} {borr_sym}\n"
         f"<b>Interest Rate:</b> {rate / (10 ** (borr_dec - 2)):.2f}%\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -85,13 +97,15 @@ async def on_close_trove(bot: TinyBot, log: object) -> None:
         ],
     )
 
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"🔒 <b>Trove Closed</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Collateral:</b> {fmt(collateral / (10**coll_dec))} {coll_sym}\n"
         f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -114,13 +128,15 @@ async def on_close_zombie_trove(bot: TinyBot, log: object) -> None:
         ],
     )
 
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"🧟 <b>Zombie Trove Closed</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Collateral:</b> {fmt(collateral / (10**coll_dec))} {coll_sym}\n"
         f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -133,12 +149,14 @@ async def on_add_collateral(bot: TinyBot, log: object) -> None:
     coll_token = bot.w3.eth.contract(address=tm.functions.collateral_token().call(), abi=ERC20_ABI)
     sym, dec = multicall(bot.w3, [coll_token.functions.symbol(), coll_token.functions.decimals()])
 
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"💰 <b>Collateral Added</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Amount:</b> {fmt(amount / (10**dec))} {sym}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -151,12 +169,14 @@ async def on_remove_collateral(bot: TinyBot, log: object) -> None:
     coll_token = bot.w3.eth.contract(address=tm.functions.collateral_token().call(), abi=ERC20_ABI)
     sym, dec = multicall(bot.w3, [coll_token.functions.symbol(), coll_token.functions.decimals()])
 
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"💳 <b>Collateral Removed</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Amount:</b> {fmt(amount / (10**dec))} {sym}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -170,13 +190,15 @@ async def on_borrow(bot: TinyBot, log: object) -> None:
     borr_token = bot.w3.eth.contract(address=tm.functions.borrow_token().call(), abi=ERC20_ABI)
     sym, dec = multicall(bot.w3, [borr_token.functions.symbol(), borr_token.functions.decimals()])
 
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"💸 <b>Borrowed</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Amount:</b> {fmt(debt / (10**dec))} {sym}\n"
         f"<b>Upfront Fee:</b> {fmt(upfront_fee / (10**dec))} {sym}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -189,12 +211,14 @@ async def on_repay(bot: TinyBot, log: object) -> None:
     borr_token = bot.w3.eth.contract(address=tm.functions.borrow_token().call(), abi=ERC20_ABI)
     sym, dec = multicall(bot.w3, [borr_token.functions.symbol(), borr_token.functions.decimals()])
 
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"💼 <b>Repaid</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Amount:</b> {fmt(debt / (10**dec))} {sym}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -209,14 +233,16 @@ async def on_adjust_interest_rate(bot: TinyBot, log: object) -> None:
     sym, dec = multicall(bot.w3, [borr_token.functions.symbol(), borr_token.functions.decimals()])
     old_rate = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber - 1)[2]
 
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"⚖️ <b>Interest Rate Adjusted</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Old Rate:</b> {old_rate / (10 ** (dec - 2)):.2f}%\n"
         f"<b>New Rate:</b> {rate / (10 ** (dec - 2)):.2f}%\n"
         f"<b>Upfront Fee:</b> {fmt(upfront_fee / (10**dec))} {sym}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -242,14 +268,16 @@ async def on_liquidate_trove(bot: TinyBot, log: object) -> None:
     )
 
     status = "Full" if is_full else "Partial"
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"💦 <b>{status} Liquidation!</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Liquidator:</b> {safe_name(bot.w3, liquidator, shorten=True)}\n"
         f"<b>Collateral:</b> {fmt(collateral / (10**coll_dec))} {coll_sym}\n"
         f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -274,7 +302,8 @@ async def on_redeem_trove(bot: TinyBot, log: object) -> None:
     )
     rate = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber - 1)[2]
 
-    await notify_group_chat(
+    await post_event(
+        bot,
         f"😬 <b>Trove Redeemed</b>\n\n"
         f"<b>Trove ID:</b> {short(trove_id)}\n"
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
@@ -282,7 +311,8 @@ async def on_redeem_trove(bot: TinyBot, log: object) -> None:
         f"<b>Collateral:</b> {fmt(collateral / (10**coll_dec))} {coll_sym}\n"
         f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}\n"
         f"<b>Rate:</b> {rate / (10 ** (borr_dec - 2)):.2f}%\n\n"
-        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
+        f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
+        owner,
     )
 
 
@@ -513,6 +543,10 @@ async def check_and_report(bot: TinyBot) -> None:
         print(f"report tx sent for {lender}: {tx_hash}")
 
 
+async def backup_alerts(bot: TinyBot) -> None:
+    await asyncio.to_thread(bot.store.flush)
+
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -524,6 +558,12 @@ async def run() -> None:
         name=f"📡 {network()} flex monitor",
         private_key=os.environ["KEEPER_PRIVATE_KEY"],
     )
+    github = (
+        {"repo": GITHUB_REPO, "path": GITHUB_BACKUP_PATH, "branch": GITHUB_BACKUP_BRANCH, "token": GITHUB_TOKEN}
+        if GITHUB_TOKEN and GITHUB_REPO
+        else None
+    )
+    bot.store = Store(ALERTS_STATE_PATH, github=github)
 
     markets = get_all_markets(bot.w3)
     lenders = get_all_lenders(bot.w3, markets)
@@ -594,6 +634,10 @@ async def run() -> None:
     # Periodic: check & report strategies hourly
     bot.every(REPORT_INTERVAL, check_and_report)
 
+    # Periodic: back up alerts state to GitHub (~daily)
+    if GITHUB_TOKEN and GITHUB_REPO:
+        bot.every(BACKUP_INTERVAL, backup_alerts)
+
     # # TEST Trove Manager
     # await bot.replay("on_open_trove", from_block=25179201, to_block=25179204)
     # await bot.replay("on_close_trove", from_block=24743415, to_block=24743417)
@@ -625,4 +669,4 @@ async def run() -> None:
     # # TEST Factory
     # await bot.replay("on_deploy_new_market", from_block=24737201, to_block=24737203)
 
-    await bot.run()
+    await asyncio.gather(bot.run(), telegram_command_loop(bot))
