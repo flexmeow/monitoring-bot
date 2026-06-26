@@ -48,7 +48,7 @@ INTERVAL = 300
 REPORT_INTERVAL = 3600
 
 # Max base fee for reporting (gwei)
-MAX_GAS_GWEI = 1
+MAX_GAS_GWEI = 2
 
 # Alerts
 ALERTS_STATE_PATH = os.environ.get("ALERTS_STATE_PATH", "alerts.json")
