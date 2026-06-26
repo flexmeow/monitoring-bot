@@ -8,5 +8,18 @@
             {"name": "", "type": "bytes"}
         ],
         "stateMutability": "view"
+    },
+    {
+        "name": "vaultReportTrigger",
+        "type": "function",
+        "inputs": [
+            {"name": "_vault", "type": "address"},
+            {"name": "_strategy", "type": "address"}
+        ],
+        "outputs": [
+            {"name": "", "type": "bool"},
+            {"name": "", "type": "bytes"}
+        ],
+        "stateMutability": "view"
     }
 ]

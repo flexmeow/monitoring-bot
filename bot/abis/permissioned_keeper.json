@@ -1,0 +1,32 @@
+[
+    {
+        "name": "harvestStrategy",
+        "type": "function",
+        "inputs": [{"name": "_strategyAddress", "type": "address"}],
+        "outputs": [
+            {"name": "profit", "type": "uint256"},
+            {"name": "loss", "type": "uint256"}
+        ],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "name": "processReport",
+        "type": "function",
+        "inputs": [
+            {"name": "_vaultAddress", "type": "address"},
+            {"name": "_strategyAddress", "type": "address"}
+        ],
+        "outputs": [
+            {"name": "gain", "type": "uint256"},
+            {"name": "loss", "type": "uint256"}
+        ],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "name": "keepers",
+        "type": "function",
+        "inputs": [{"name": "", "type": "address"}],
+        "outputs": [{"name": "", "type": "bool"}],
+        "stateMutability": "view"
+    }
+]

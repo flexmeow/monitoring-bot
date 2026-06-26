@@ -12,6 +12,7 @@ class NetworkCfg(TypedDict):
     registry: str
     factory: str
     explorer: str
+    allocator_vaults: list[str]
     known_addresses: dict[str, str]
 
 
@@ -20,6 +21,9 @@ NETWORKS: Mapping[str, NetworkCfg] = {
         "registry": "0x9117440a7D03238905d1C8908157Bd7a547c77c8",
         "factory": "0xe2c4a5C2AB1ed5745D206B33cc0abf0A5D34753d",
         "explorer": "https://etherscan.io/",
+        "allocator_vaults": [
+            "0x863687e4E9751b57F38b4B0ebA04744C72d0f7B8",  # yvFlexUSDC
+        ],
         "known_addresses": {
             "0xEf77cc176c748d291EfB6CdC982c5744fC7211c8": "yRoboTreasury",
             "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7": "SMS",
@@ -34,9 +38,10 @@ NETWORKS: Mapping[str, NetworkCfg] = {
     },
 }
 
-# Common Report Trigger and Permissionless Keeper (Yearn V3)
+# Common Report Trigger and keepers (Yearn V3)
 COMMON_REPORT_TRIGGER = Web3.to_checksum_address("0xf8dF17a35c88AbB25e83C92f9D293B4368b9D52D")
-PERMISSIONLESS_KEEPER = Web3.to_checksum_address("0x52605BbF54845f520a3E94792d019f62407db2f8")
+PERMISSIONLESS_KEEPER = Web3.to_checksum_address("0x52605BbF54845f520a3E94792d019f62407db2f8")  # Flex lenders
+PERMISSIONED_KEEPER = Web3.to_checksum_address("0x604e586F17cE106B64185A7a0d2c1Da5bAce711E")  # allocator vaults
 
 # Intervals
 INTERVAL = 300
@@ -66,6 +71,8 @@ AUCTION_ABI = json.loads((_abis / "auction.json").read_text())
 LENDER_ABI = json.loads((_abis / "lender.json").read_text())
 REPORT_TRIGGER_ABI = json.loads((_abis / "report_trigger.json").read_text())
 KEEPER_ABI = json.loads((_abis / "keeper.json").read_text())
+PERMISSIONED_KEEPER_ABI = json.loads((_abis / "permissioned_keeper.json").read_text())
+ALLOCATOR_VAULT_ABI = json.loads((_abis / "allocator_vault.json").read_text())
 ERC20_ABI = json.loads((_abis / "erc20.json").read_text())
 
 
@@ -139,6 +146,10 @@ def registry_addr() -> str:
 
 def factory_addr() -> str:
     return Web3.to_checksum_address(cfg()["factory"])
+
+
+def allocator_vaults() -> list[str]:
+    return [Web3.to_checksum_address(v) for v in cfg()["allocator_vaults"]]
 
 
 def get_all_markets(w3: Web3) -> list[str]:

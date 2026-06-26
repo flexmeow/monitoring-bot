@@ -1,0 +1,9 @@
+[
+    {
+        "name": "get_default_queue",
+        "type": "function",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "address[]"}],
+        "stateMutability": "view"
+    }
+]

@@ -1,13 +1,14 @@
 import asyncio
 import os
 
-from tinybot import TinyBot, multicall, notify_group_chat
+from tinybot import DEV_GROUP_CHAT_ID, TinyBot, multicall, notify_group_chat
 
 from bot.alerts.forward import post_event
 from bot.alerts.poller import telegram_command_loop
 from bot.alerts.store import Store
 from bot.config import (
     ALERTS_STATE_PATH,
+    ALLOCATOR_VAULT_ABI,
     AUCTION_ABI,
     BACKUP_INTERVAL,
     COMMON_REPORT_TRIGGER,
@@ -21,11 +22,14 @@ from bot.config import (
     KEEPER_ABI,
     LENDER_ABI,
     MAX_GAS_GWEI,
+    PERMISSIONED_KEEPER,
+    PERMISSIONED_KEEPER_ABI,
     PERMISSIONLESS_KEEPER,
     REGISTRY_ABI,
     REPORT_INTERVAL,
     REPORT_TRIGGER_ABI,
     TROVE_MANAGER_ABI,
+    allocator_vaults,
     explorer_tx_url,
     factory_addr,
     fmt,
@@ -519,28 +523,56 @@ async def on_deploy_new_market(bot: TinyBot, log: object) -> None:
 # =============================================================================
 
 
+async def _notify_report(bot: TinyBot, vault: str, strategy: str, tx_hash: str) -> None:
+    await notify_group_chat(
+        f"⚙️ <b>Reported</b>\n"
+        f"<b>Vault:</b> {safe_name(bot.w3, vault, shorten=True)}\n"
+        f"<b>Strategy:</b> {safe_name(bot.w3, strategy, shorten=True)}\n\n"
+        f"<a href='{explorer_tx_url()}{tx_hash}'>🔗 View Transaction</a>",
+        chat_id=DEV_GROUP_CHAT_ID,
+    )
+
+
 async def check_and_report(bot: TinyBot) -> None:
     base_fee_gwei = bot.w3.eth.get_block("latest").baseFeePerGas / 1e9
     if base_fee_gwei > MAX_GAS_GWEI:
         print(f"skipping report: base fee {base_fee_gwei:.2f} gwei > {MAX_GAS_GWEI}")
         return
 
-    markets = get_all_markets(bot.w3)
-    if not markets:
-        return
-
-    lenders = get_all_lenders(bot.w3, markets)
     trigger = bot.w3.eth.contract(address=COMMON_REPORT_TRIGGER, abi=REPORT_TRIGGER_ABI)
     keeper = bot.w3.eth.contract(address=PERMISSIONLESS_KEEPER, abi=KEEPER_ABI)
 
-    for lender in lenders:
-        should_report, _ = trigger.functions.strategyReportTrigger(lender).call()
-        if not should_report:
-            continue
+    markets = get_all_markets(bot.w3)
+    if markets:
+        for lender in get_all_lenders(bot.w3, markets):
+            should_report, _ = trigger.functions.strategyReportTrigger(lender).call()
+            if should_report:
+                tx_hash = bot.executor.execute(keeper.functions.report(lender), max_priority_fee_gwei=0.1)
+                print(f"report tx sent for lender {lender}: {tx_hash}")
 
-        call = keeper.functions.report(lender)
-        tx_hash = bot.executor.execute(call, max_priority_fee_gwei=0.1)
-        print(f"report tx sent for {lender}: {tx_hash}")
+    vaults = allocator_vaults()
+    if not vaults:
+        return
+
+    perm_keeper = bot.w3.eth.contract(address=PERMISSIONED_KEEPER, abi=PERMISSIONED_KEEPER_ABI)
+    if not perm_keeper.functions.keepers(bot.executor.address).call():
+        print(f"skipping allocator reports: {bot.executor.address} is not a keeper on {PERMISSIONED_KEEPER}")
+        return
+
+    for vault_addr in vaults:
+        vault = bot.w3.eth.contract(address=vault_addr, abi=ALLOCATOR_VAULT_ABI)
+        for strategy in vault.functions.get_default_queue().call():
+            should_strategy, _ = trigger.functions.strategyReportTrigger(strategy).call()
+            if should_strategy:
+                tx_hash = bot.executor.execute(perm_keeper.functions.harvestStrategy(strategy), max_priority_fee_gwei=0.1)
+                await _notify_report(bot, vault_addr, strategy, tx_hash)
+
+            should_vault, _ = trigger.functions.vaultReportTrigger(vault_addr, strategy).call()
+            if should_vault:
+                tx_hash = bot.executor.execute(
+                    perm_keeper.functions.processReport(vault_addr, strategy), max_priority_fee_gwei=0.1
+                )
+                await _notify_report(bot, vault_addr, strategy, tx_hash)
 
 
 async def backup_alerts(bot: TinyBot) -> None:
