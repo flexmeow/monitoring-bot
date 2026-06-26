@@ -534,7 +534,6 @@ async def _notify_report(bot: TinyBot, vault: str, strategy: str, tx_hash: str) 
 
 
 async def check_and_report(bot: TinyBot) -> None:
-    print(f"checking for reports at {bot.w3.eth.block_number}...")
     base_fee_gwei = bot.w3.eth.get_block("latest").baseFeePerGas / 1e9
     if base_fee_gwei > MAX_GAS_GWEI:
         print(f"skipping report: base fee {base_fee_gwei:.2f} gwei > {MAX_GAS_GWEI}")
