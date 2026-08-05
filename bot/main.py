@@ -31,7 +31,7 @@ from bot.config import (
     TROVE_MANAGER_ABI,
     allocator_vaults,
     explorer_tx_url,
-    factory_addr,
+    factory_addrs,
     fmt,
     get_all_auctions,
     get_all_lenders,
@@ -658,7 +658,7 @@ async def run() -> None:
     bot.listen(
         poll_interval=INTERVAL,
         event="DeployNewMarket",
-        addresses=[factory_addr()],
+        addresses=factory_addrs(),
         abi=FACTORY_ABI,
         handler=on_deploy_new_market,
     )

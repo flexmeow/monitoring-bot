@@ -10,7 +10,7 @@ from web3 import Web3
 
 class NetworkCfg(TypedDict):
     registry: str
-    factory: str
+    factories: list[str]
     explorer: str
     allocator_vaults: list[str]
     known_addresses: dict[str, str]
@@ -19,7 +19,10 @@ class NetworkCfg(TypedDict):
 NETWORKS: Mapping[str, NetworkCfg] = {
     "ethereum": {
         "registry": "0x9117440a7D03238905d1C8908157Bd7a547c77c8",
-        "factory": "0xe2c4a5C2AB1ed5745D206B33cc0abf0A5D34753d",
+        "factories": [
+            "0xe2c4a5C2AB1ed5745D206B33cc0abf0A5D34753d",  # v1.0 -- deprecated, drop once unendorsed
+            "0xfFc787AD990dA8f73dDA2B971Dce31C0D9d2501F",  # v1.1
+        ],
         "explorer": "https://etherscan.io/",
         "allocator_vaults": [
             "0x863687e4E9751b57F38b4B0ebA04744C72d0f7B8",  # yvFlexUSDC
@@ -144,8 +147,8 @@ def registry_addr() -> str:
     return Web3.to_checksum_address(cfg()["registry"])
 
 
-def factory_addr() -> str:
-    return Web3.to_checksum_address(cfg()["factory"])
+def factory_addrs() -> list[str]:
+    return [Web3.to_checksum_address(f) for f in cfg()["factories"]]
 
 
 def allocator_vaults() -> list[str]:
