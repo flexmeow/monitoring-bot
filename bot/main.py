@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sys
 
 from tinybot import DEV_GROUP_CHAT_ID, TinyBot, multicall, notify_group_chat
 
@@ -483,6 +484,8 @@ async def on_endorse_market(bot: TinyBot, log: object) -> None:
         f"<b>Trove Manager:</b> {short(trove_manager)}\n\n"
         f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
     )
+    bot.store.flush()  # don't lose watchlist changes since the last daily backup
+    sys.exit(0)  # docker compose restarts us; startup discovery then picks up the new market
 
 
 async def on_unendorse_market(bot: TinyBot, log: object) -> None:
@@ -499,6 +502,8 @@ async def on_unendorse_market(bot: TinyBot, log: object) -> None:
         f"<b>Trove Manager:</b> {short(trove_manager)}\n\n"
         f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
     )
+    bot.store.flush()  # don't lose watchlist changes since the last daily backup
+    sys.exit(0)  # docker compose restarts us; startup discovery then drops the market
 
 
 async def on_deploy_new_market(bot: TinyBot, log: object) -> None:
@@ -671,12 +676,12 @@ async def run() -> None:
         bot.every(BACKUP_INTERVAL, backup_alerts)
 
     # # TEST Trove Manager
-    # await bot.replay("on_open_trove", from_block=25179201, to_block=25179204)
+    # await bot.replay("on_open_trove", from_block=25735168, to_block=25735170)
     # await bot.replay("on_close_trove", from_block=24743415, to_block=24743417)
     # await bot.replay("on_close_zombie_trove", from_block=24750530, to_block=24750532)
-    # await bot.replay("on_add_collateral", from_block=24742696, to_block=24742698)
+    # await bot.replay("on_add_collateral", from_block=25735168, to_block=25735170)
     # await bot.replay("on_remove_collateral", from_block=24743344, to_block=24743346)
-    # await bot.replay("on_borrow", from_block=24743349, to_block=24743351)
+    # await bot.replay("on_borrow", from_block=25735168, to_block=25735170)
     # await bot.replay("on_repay", from_block=24743354, to_block=24743356)
     # await bot.replay("on_adjust_interest_rate", from_block=24743358, to_block=24743360)
     # await bot.replay("on_liquidate_trove", from_block=24750633, to_block=24750635)
@@ -687,7 +692,7 @@ async def run() -> None:
 
     # # TEST Lender
     # await bot.replay("on_reported", from_block=24742508, to_block=24742510)
-    # await bot.replay("on_deposit", from_block=24737555, to_block=24737557)
+    # await bot.replay("on_deposit", from_block=25735092, to_block=25735094)
     # await bot.replay("on_withdraw", from_block=24743460, to_block=24743462)
 
     # # TEST Auction
