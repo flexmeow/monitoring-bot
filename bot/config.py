@@ -166,6 +166,16 @@ def get_all_markets(w3: Web3) -> list[str]:
     return [w3.to_checksum_address(m) for m, s in zip(markets, statuses) if s == 1]
 
 
+def get_trove_rate(w3: Web3, trove_manager: str, trove_id: int, block: int) -> int:
+    """Read annual_interest_rate from troves(trove_id) via a raw call: v1.0 and v1.1
+    trove managers return different struct sizes, but the rate is word 2 in both."""
+    data = w3.keccak(text="troves(uint256)")[:4] + trove_id.to_bytes(32, "big")
+    ret = w3.eth.call({"to": Web3.to_checksum_address(trove_manager), "data": data}, block_identifier=block)
+    if len(ret) < 96:
+        raise ValueError(f"unexpected troves() return ({len(ret)} bytes) from {trove_manager}")
+    return int.from_bytes(ret[64:96], "big")
+
+
 def get_all_lenders(w3: Web3, markets: list[str]) -> list[str]:
     """Get lender addresses for all trove managers."""
     lender_calls = [

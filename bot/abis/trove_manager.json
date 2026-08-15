@@ -36,6 +36,7 @@
             {"name": "collateral", "type": "uint256"},
             {"name": "annual_interest_rate", "type": "uint256"},
             {"name": "last_debt_update_time", "type": "uint64"},
+            {"name": "last_debt_increase_time", "type": "uint64"},
             {"name": "last_interest_rate_adj_time", "type": "uint64"},
             {"name": "owner", "type": "address"},
             {"name": "status", "type": "uint8"}
