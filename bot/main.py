@@ -37,7 +37,6 @@ from bot.config import (
     get_all_auctions,
     get_all_lenders,
     get_all_markets,
-    get_trove_rate,
     network,
     registry_addr,
     safe_name,
@@ -237,7 +236,7 @@ async def on_adjust_interest_rate(bot: TinyBot, log: object) -> None:
     tm = bot.w3.eth.contract(address=log.address, abi=TROVE_MANAGER_ABI)
     borr_token = bot.w3.eth.contract(address=tm.functions.borrow_token().call(), abi=ERC20_ABI)
     sym, dec = multicall(bot.w3, [borr_token.functions.symbol(), borr_token.functions.decimals()])
-    old_rate = get_trove_rate(bot.w3, log.address, trove_id, log.blockNumber - 1)
+    old_rate = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber - 1)[2]
 
     await post_event(
         bot,
@@ -306,7 +305,7 @@ async def on_redeem_trove(bot: TinyBot, log: object) -> None:
             borr_token.functions.decimals(),
         ],
     )
-    rate = get_trove_rate(bot.w3, log.address, trove_id, log.blockNumber - 1)
+    rate = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber - 1)[2]
 
     await post_event(
         bot,

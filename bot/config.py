@@ -20,7 +20,6 @@ NETWORKS: Mapping[str, NetworkCfg] = {
     "ethereum": {
         "registry": "0x9117440a7D03238905d1C8908157Bd7a547c77c8",
         "factories": [
-            "0xe2c4a5C2AB1ed5745D206B33cc0abf0A5D34753d",  # v1.0 -- deprecated, drop once unendorsed
             "0xfFc787AD990dA8f73dDA2B971Dce31C0D9d2501F",  # v1.1
         ],
         "explorer": "https://etherscan.io/",
@@ -164,16 +163,6 @@ def get_all_markets(w3: Web3) -> list[str]:
     status_calls = [registry.functions.market_status(w3.to_checksum_address(m)) for m in markets]
     statuses = multicall(w3, status_calls)
     return [w3.to_checksum_address(m) for m, s in zip(markets, statuses) if s == 1]
-
-
-def get_trove_rate(w3: Web3, trove_manager: str, trove_id: int, block: int) -> int:
-    """Read annual_interest_rate from troves(trove_id) via a raw call: v1.0 and v1.1
-    trove managers return different struct sizes, but the rate is word 2 in both."""
-    data = w3.keccak(text="troves(uint256)")[:4] + trove_id.to_bytes(32, "big")
-    ret = w3.eth.call({"to": Web3.to_checksum_address(trove_manager), "data": data}, block_identifier=block)
-    if len(ret) < 96:
-        raise ValueError(f"unexpected troves() return ({len(ret)} bytes) from {trove_manager}")
-    return int.from_bytes(ret[64:96], "big")
 
 
 def get_all_lenders(w3: Web3, markets: list[str]) -> list[str]:
