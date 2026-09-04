@@ -44,6 +44,20 @@
         "stateMutability": "view"
     },
     {
+        "name": "total_debt",
+        "type": "function",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "uint256"}],
+        "stateMutability": "view"
+    },
+    {
+        "name": "total_weighted_debt",
+        "type": "function",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "uint256"}],
+        "stateMutability": "view"
+    },
+    {
         "anonymous": false,
         "name": "OpenTrove",
         "type": "event",

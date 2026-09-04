@@ -52,6 +52,9 @@ REPORT_INTERVAL = 3600
 # Max base fee for reporting (gwei)
 MAX_GAS_GWEI = 2
 
+# Trove status (Vyper flag: ACTIVE=1, ZOMBIE=2, CLOSED=4, LIQUIDATED=8)
+TROVE_STATUS_ZOMBIE = 2
+
 # Alerts
 ALERTS_STATE_PATH = os.environ.get("ALERTS_STATE_PATH", "alerts.json")
 MAX_ADDRESSES_PER_USER = 5

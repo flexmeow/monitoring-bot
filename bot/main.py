@@ -30,6 +30,7 @@ from bot.config import (
     REPORT_INTERVAL,
     REPORT_TRIGGER_ABI,
     TROVE_MANAGER_ABI,
+    TROVE_STATUS_ZOMBIE,
     allocator_vaults,
     explorer_tx_url,
     factory_addrs,
@@ -238,6 +239,15 @@ async def on_adjust_interest_rate(bot: TinyBot, log: object) -> None:
     sym, dec = multicall(bot.w3, [borr_token.functions.symbol(), borr_token.functions.decimals()])
     old_rate = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber - 1)[2]
 
+    td_before = tm.functions.total_debt().call(block_identifier=log.blockNumber - 1)
+    wd_before = tm.functions.total_weighted_debt().call(block_identifier=log.blockNumber - 1)
+    td_after = tm.functions.total_debt().call(block_identifier=log.blockNumber)
+    wd_after = tm.functions.total_weighted_debt().call(block_identifier=log.blockNumber)
+
+    scale = 10 ** (dec - 2)
+    avg_before = f"{wd_before / td_before / scale:.2f}%" if td_before else "—"
+    avg_after = f"{wd_after / td_after / scale:.2f}%" if td_after else "—"
+
     await post_event(
         bot,
         f"⚖️ <b>Interest Rate Adjusted</b>\n\n"
@@ -245,6 +255,7 @@ async def on_adjust_interest_rate(bot: TinyBot, log: object) -> None:
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Old Rate:</b> {old_rate / (10 ** (dec - 2)):.2f}%\n"
         f"<b>New Rate:</b> {rate / (10 ** (dec - 2)):.2f}%\n"
+        f"<b>Avg Rate:</b> {avg_before} → {avg_after}\n"
         f"<b>Upfront Fee:</b> {fmt(upfront_fee / (10**dec))} {sym}\n\n"
         f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
         owner,
@@ -305,7 +316,17 @@ async def on_redeem_trove(bot: TinyBot, log: object) -> None:
             borr_token.functions.decimals(),
         ],
     )
-    rate = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber - 1)[2]
+    pre = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber - 1)
+    post = tm.functions.troves(trove_id).call(block_identifier=log.blockNumber)
+    rate = pre[2]
+    remaining: int = post[0]
+    pct_of_trove = debt / (debt + remaining) * 100
+
+    zombie_line = ""
+    if post[7] == TROVE_STATUS_ZOMBIE:
+        turned = "Turned into a zombie" if pre[7] != TROVE_STATUS_ZOMBIE else "Zombie Trove"
+        left = "fully redeemed" if remaining == 0 else f"remaining debt {fmt(remaining / (10**borr_dec))} {borr_sym}"
+        zombie_line = f"🧟 <b>{turned}</b> ({left})\n"
 
     await post_event(
         bot,
@@ -314,8 +335,9 @@ async def on_redeem_trove(bot: TinyBot, log: object) -> None:
         f"<b>Owner:</b> {safe_name(bot.w3, owner, shorten=True)}\n"
         f"<b>Redeemer:</b> {safe_name(bot.w3, redeemer, shorten=True)}\n"
         f"<b>Collateral:</b> {fmt(collateral / (10**coll_dec))} {coll_sym}\n"
-        f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}\n"
-        f"<b>Rate:</b> {rate / (10 ** (borr_dec - 2)):.2f}%\n\n"
+        f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym} ({pct_of_trove:.1f}% of Trove)\n"
+        f"<b>Rate:</b> {rate / (10 ** (borr_dec - 2)):.2f}%\n"
+        f"{zombie_line}\n"
         f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>",
         owner,
     )
@@ -339,11 +361,22 @@ async def on_redeem(bot: TinyBot, log: object) -> None:
         ],
     )
 
+    td_before = tm.functions.total_debt().call(block_identifier=log.blockNumber - 1)
+    wd_before = tm.functions.total_weighted_debt().call(block_identifier=log.blockNumber - 1)
+    td_after = tm.functions.total_debt().call(block_identifier=log.blockNumber)
+    wd_after = tm.functions.total_weighted_debt().call(block_identifier=log.blockNumber)
+
+    scale = 10 ** (borr_dec - 2)
+    avg_before = f"{wd_before / td_before / scale:.2f}%" if td_before else "—"
+    avg_after = f"{wd_after / td_after / scale:.2f}%" if td_after else "—"
+    pct_of_market = f" ({debt / td_before * 100:.1f}% of market)" if td_before else ""
+
     await notify_group_chat(
         f"🤠 <b>Redemption</b>\n\n"
         f"<b>Redeemer:</b> {safe_name(bot.w3, redeemer, shorten=True)}\n"
         f"<b>Collateral:</b> {fmt(collateral / (10**coll_dec))} {coll_sym}\n"
-        f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}\n\n"
+        f"<b>Debt:</b> {fmt(debt / (10**borr_dec))} {borr_sym}{pct_of_market}\n"
+        f"<b>Avg Rate:</b> {avg_before} → {avg_after}\n\n"
         f"<a href='{explorer_tx_url()}{log.transactionHash.hex()}'>🔗 View Transaction</a>"
     )
 
