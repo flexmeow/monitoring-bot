@@ -600,7 +600,10 @@ async def check_and_report(bot: TinyBot) -> None:
     for vault_addr in vaults:
         vault = bot.w3.eth.contract(address=vault_addr, abi=ALLOCATOR_VAULT_ABI)
         for strategy in vault.functions.get_default_queue().call():
-            should_strategy, _ = trigger.functions.strategyReportTrigger(strategy).call()
+            try:
+                should_strategy, _ = trigger.functions.strategyReportTrigger(strategy).call()
+            except Exception:
+                should_strategy = False  # queue entry with no keeper (e.g. a nested vault like yvWETH-1)
             if should_strategy:
                 tx_hash = bot.executor.execute(perm_keeper.functions.harvestStrategy(strategy), max_priority_fee_gwei=0.1)
                 await _notify_report(bot, vault_addr, strategy, tx_hash)

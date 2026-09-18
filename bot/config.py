@@ -25,6 +25,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
         "explorer": "https://etherscan.io/",
         "allocator_vaults": [
             "0x863687e4E9751b57F38b4B0ebA04744C72d0f7B8",  # yvFlexUSDC
+            "0xfaC55fAFD0b55BFb8dD41F735EfCc195adA9891F",  # yvFlexWETH
         ],
         "known_addresses": {
             "0xEf77cc176c748d291EfB6CdC982c5744fC7211c8": "yRoboTreasury",
